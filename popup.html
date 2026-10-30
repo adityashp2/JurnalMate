@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JurnalMate</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="app-container">
+
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+            <path d="M6 6h10" />
+            <path d="M6 10h10" />
+            <path d="M6 14h6" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">JurnalMate</h1>
+          <span class="brand-tag">Auto-Fill & Reminder</span>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div id="status-chip-gemini" class="status-indicator" title="Status API Gemini">
+          <span class="indicator-dot"></span>
+          <span class="indicator-label">Gemini</span>
+        </div>
+        <div id="status-chip-alarm" class="status-indicator" title="Status Pengingat WA">
+          <span class="indicator-dot"></span>
+          <span class="indicator-label" id="lbl-status-wa">Fonnte</span>
+        </div>
+        <button id="btn-open-options" class="header-options-btn" title="Buka Pengaturan (Halaman Opsi)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs (Segmented Control) -->
+    <nav class="nav-segmented" role="tablist">
+      <button class="nav-segment active" data-tab="tab-journal" role="tab" aria-selected="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+        <span>Jurnal</span>
+      </button>
+
+      <button class="nav-segment" data-tab="tab-whatsapp" role="tab" aria-selected="false">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span>Pengingat & Alarm</span>
+      </button>
+
+      <button class="nav-segment" data-tab="tab-history" role="tab" aria-selected="false">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span>Riwayat</span>
+      </button>
+    </nav>
+
+    <!-- Global Notice (API Key Missing Warning) -->
+    <div id="notice-no-key" class="notice-card notice-warning hidden">
+      <div class="notice-content">
+        <span class="notice-icon">⚠️</span>
+        <div>
+          <div class="notice-title">Gemini API Key Belum Dikonfigurasi</div>
+          <div class="notice-desc">Tambahkan API key gratis di menu Pengaturan agar generator jurnal dapat bekerja.
+          </div>
+        </div>
+      </div>
+      <button id="btn-goto-settings" class="btn btn-outline btn-xs">Buka Pengaturan</button>
+    </div>
+
+    <!-- MAIN SCROLLABLE BODY -->
+
+    <!-- TAB 1: AUTO JURNAL (AI GEMINI) -->
+    <section id="tab-journal" class="tab-pane active">
+      <div class="form-container">
+
+        <!-- Options Row -->
+        <div class="form-row-responsive">
+          <div class="field-item">
+            <label for="journal-category" class="field-label">Format / Kategori</label>
+            <div class="select-wrapper">
+              <select id="journal-category" class="field-select">
+                <option value="star" selected>PKL / Magang (STAR 5 Kolom)</option>
+                <option value="kantor">Pekerjaan Kantor (1 Kolom)</option>
+                <option value="asn">Kinerja ASN / PPPK</option>
+                <option value="tech">Software Engineer / IT</option>
+                <option value="umum">Catatan Umum</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-item" id="col-pekan">
+            <label for="journal-pekan" class="field-label">Pekan Ke</label>
+            <input type="number" id="journal-pekan" class="field-input-sm" value="9" min="1" max="52" placeholder="9">
+          </div>
+
+          <div class="field-item hidden" id="col-style">
+            <label for="journal-style" class="field-label">Gaya Bahasa</label>
+            <div class="select-wrapper">
+              <select id="journal-style" class="field-select">
+                <option value="formal">Formal Naratif (Baku)</option>
+                <option value="terstruktur">Poin Berbutir</option>
+                <option value="ringkas">Ringkas & Padat</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes Input -->
+        <div class="field-group">
+          <div class="field-header">
+            <label for="journal-notes" class="field-label">Poin Kegiatan Pekan Ini</label>
+            <span class="field-counter">Catat poin singkat</span>
+          </div>
+          <textarea id="journal-notes" class="field-textarea" rows="2"
+            placeholder="Contoh: optimalisasi database, koordinasi pembimbing, selesaikan administrasi..."></textarea>
+        </div>
+
+        <!-- Generate Button -->
+        <button id="btn-generate-ai" class="btn btn-primary btn-fluid">
+          <span class="spinner hidden" id="spinner-generate"></span>
+          <svg class="btn-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <path
+              d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+          </svg>
+          <span id="btn-generate-text">Generate 5 Kolom STAR dengan AI</span>
+        </button>
+
+        <!-- Result Section -->
+        <div id="journal-result-container" class="surface-card">
+          <div class="surface-header">
+            <span class="surface-title" id="draft-title">Draft Logbook STAR (5 Kolom)</span>
+            <div class="surface-meta">
+              <span id="word-count">0 kata</span> • <span id="char-count">0 karakter</span>
+            </div>
+          </div>
+
+          <!-- Section Pills (Active in STAR mode) -->
+          <div id="star-pills-bar" class="star-nav-pills">
+            <button type="button" class="star-pill active" data-section="situation">
+              <span class="pill-dot"></span> Situasi
+            </button>
+            <button type="button" class="star-pill" data-section="task">
+              <span class="pill-dot"></span> Tugas
+            </button>
+            <button type="button" class="star-pill" data-section="action">
+              <span class="pill-dot"></span> Aksi
+            </button>
+            <button type="button" class="star-pill" data-section="result">
+              <span class="pill-dot"></span> Hasil
+            </button>
+            <button type="button" class="star-pill" data-section="komentar">
+              <span class="pill-dot"></span> Komentar
+            </button>
+            <button type="button" class="star-pill pill-all" data-section="all" title="Lihat gabungan seluruh kolom">
+              Semua
+            </button>
+          </div>
+
+          <!-- Field Description Subnote -->
+          <div id="star-field-desc" class="field-subnote">
+            Silahkan ceritakan situasi yang terjadi dengan detail selama kegiatan PKL pekan ini.
+          </div>
+
+          <textarea id="journal-output" class="field-textarea result-field" rows="3"
+            placeholder="Hasil generate AI per kolom akan tampil di sini dan dapat diedit..."></textarea>
+
+          <!-- Action Buttons (Responsive Layout) -->
+          <div class="actions-grid">
+            <button id="btn-autofill-web" class="btn btn-emerald"
+              title="Cari form jurnal dan isi otomatis semua kolom di web aktif">
+              <svg class="btn-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              <span id="btn-autofill-text">Isi 5 Kolom ke Web</span>
+            </button>
+
+            <button id="btn-pick-web" class="btn btn-secondary"
+              title="Klik manual kolom form yang ingin diisi di halaman web">
+              <svg class="btn-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="4" />
+              </svg>
+              <span>Pilih Kolom Web</span>
+            </button>
+
+            <button id="btn-copy-result" class="btn btn-ghost" title="Salin teks kolom aktif ke clipboard">
+              <svg class="btn-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              </svg>
+              <span id="btn-copy-text">Salin Kolom</span>
+            </button>
+
+            <button id="btn-save-draft" class="btn btn-ghost" title="Simpan ke riwayat jurnal">
+              <svg class="btn-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              <span>Simpan</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: PENGINGAT ABSENSI & JURNAL (CHROME NOTIF & WA) -->
+    <section id="tab-whatsapp" class="tab-pane">
+      <div class="form-container">
+
+        <!-- Status Gateway & Desktop Notification -->
+        <div class="surface-card">
+          <div class="card-row">
+            <div>
+              <div class="card-caption">WhatsApp & Desktop Notification</div>
+              <div class="card-target-text" id="txt-wa-target-display">Tujuan: Belum diatur</div>
+            </div>
+            <button id="btn-test-chrome-notif" class="btn btn-secondary btn-xs"
+              title="Tes Tampilkan Notifikasi Desktop Chrome">
+              🔔 Tes Notif Chrome
+            </button>
+          </div>
+          <div class="card-info-text mt-1">
+            Notifikasi desktop Chrome akan otomatis muncul di layar Anda. Pesan WhatsApp juga akan dikirim jika Fonnte
+            terhubung.
+          </div>
+        </div>
+
+        <!-- CARD 1: PENGINGAT ABSENSI (HARIAN) -->
+        <div class="surface-card">
+          <div class="card-row">
+            <div>
+              <span class="surface-title">⏰ Pengingat Absensi (Tiap Hari)</span>
+              <div class="card-caption">Alarm masuk / pulang kerja & magang</div>
+            </div>
+            <label class="toggle-switch" title="Aktifkan / Nonaktifkan Pengingat Absensi">
+              <input type="checkbox" id="cfg-absensi-enabled" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="form-row-responsive mt-2">
+            <div class="field-item">
+              <label for="cfg-absensi-time" class="field-label">Jam Absensi</label>
+              <input type="time" id="cfg-absensi-time" class="field-input-sm" value="08:00">
+            </div>
+
+            <div class="field-item">
+              <label for="cfg-absensi-days" class="field-label">Pilihan Hari</label>
+              <div class="select-wrapper">
+                <select id="cfg-absensi-days" class="field-select">
+                  <option value="workdays" selected>Hari Kerja (Senin - Jumat)</option>
+                  <option value="everyday">Setiap Hari (Senin - Minggu)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-info-text mt-1" id="txt-absensi-countdown">
+            Memuat jadwal absensi...
+          </div>
+
+          <div class="mt-2">
+            <button id="btn-trigger-absensi-now" class="btn btn-whatsapp btn-sm btn-fluid"
+              title="Kirim notifikasi & pesan WA absensi sekarang juga">
+              <span class="spinner hidden" id="spinner-absensi-manual"></span>
+              <span>🔔 Kirim Pengingat Absensi Sekarang</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD 2: PENGINGAT JURNAL (MINGGUAN) -->
+        <div class="surface-card">
+          <div class="card-row">
+            <div>
+              <span class="surface-title">📝 Pengingat Jurnal (Tiap Minggu)</span>
+              <div class="card-caption">Alarm pengisian logbook mingguan STAR</div>
+            </div>
+            <label class="toggle-switch" title="Aktifkan / Nonaktifkan Pengingat Jurnal Mingguan">
+              <input type="checkbox" id="cfg-jurnal-enabled" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="form-row-responsive mt-2">
+            <div class="field-item">
+              <label for="cfg-jurnal-day" class="field-label">Hari Pengingat</label>
+              <div class="select-wrapper">
+                <select id="cfg-jurnal-day" class="field-select">
+                  <option value="5" selected>Jumat (Akhir Pekan)</option>
+                  <option value="6">Sabtu</option>
+                  <option value="0">Minggu</option>
+                  <option value="1">Senin</option>
+                  <option value="4">Kamis</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-item">
+              <label for="cfg-jurnal-time" class="field-label">Jam Pengingat</label>
+              <input type="time" id="cfg-jurnal-time" class="field-input-sm" value="16:00">
+            </div>
+          </div>
+
+          <div class="card-info-text mt-1" id="txt-jurnal-countdown">
+            Memuat jadwal jurnal mingguan...
+          </div>
+
+          <div class="mt-2">
+            <button id="btn-trigger-jurnal-now" class="btn btn-secondary btn-sm btn-fluid"
+              title="Kirim notifikasi & pesan WA jurnal mingguan sekarang juga">
+              <span class="spinner hidden" id="spinner-jurnal-manual"></span>
+              <span>📝 Kirim Pengingat Jurnal Sekarang</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD 3: TEMPLATE PESAN WHATSAPP -->
+        <div class="surface-card">
+          <div class="field-header">
+            <label for="sel-template-type" class="field-label">Template Pesan WhatsApp</label>
+            <span class="field-counter">Pilih Kategori</span>
+          </div>
+
+          <div class="select-wrapper mb-2">
+            <select id="sel-template-type" class="field-select">
+              <option value="absensi" selected>⏰ Template Pesan Absensi Harian</option>
+              <option value="jurnal">📝 Template Pesan Jurnal Mingguan</option>
+            </select>
+          </div>
+
+          <div class="chip-container">
+            <button type="button" class="chip-btn" data-var="{nama}">+ {nama}</button>
+            <button type="button" class="chip-btn" data-var="{tanggal}">+ {tanggal}</button>
+            <button type="button" class="chip-btn" data-var="{jam}">+ {jam}</button>
+            <button type="button" class="chip-btn" data-var="{hari}">+ {hari}</button>
+          </div>
+
+          <textarea id="reminder-template" class="field-textarea" rows="4"
+            placeholder="Format pesan pengingat WhatsApp..."></textarea>
+
+          <div class="action-footer">
+            <button id="btn-save-template" class="btn btn-secondary btn-sm">Simpan Template</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 3: RIWAYAT -->
+    <section id="tab-history" class="tab-pane">
+      <div class="form-container">
+
+        <!-- CARD 1: RIWAYAT AKTIVITAS & WA -->
+        <div class="surface-card">
+          <div class="surface-header">
+            <span class="surface-title">Riwayat Aktivitas & WA</span>
+            <button id="btn-clear-logs" class="text-action-link">Hapus Log</button>
+          </div>
+          <div id="wa-logs-list" class="logs-scrollable">
+            <div class="empty-state-text">Belum ada catatan aktivitas pengiriman.</div>
+          </div>
+        </div>
+
+        <!-- CARD 2: DRAFT LOGBOOK TERSIMPAN -->
+        <div class="surface-card">
+          <div class="surface-header mb-2">
+            <span class="surface-title">Draft Logbook Tersimpan</span>
+            <button id="btn-clear-history" class="text-action-link">Kosongkan Riwayat</button>
+          </div>
+          <div id="history-list" class="history-container">
+            <div class="empty-state-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              <div class="empty-title">Belum Ada Draft Tersimpan</div>
+              <div class="empty-desc">Jurnal yang berhasil dibuat akan otomatis disimpan di sini agar mudah digunakan
+                kembali.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Global Toast -->
+    <div id="popup-toast" class="toast-popup hidden"></div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>

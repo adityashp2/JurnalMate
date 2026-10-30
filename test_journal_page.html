@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulasi Portal Logbook PKL & Jurnal Harian</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #cbd5e1;
+      --primary: #0284c7;
+      --text: #0f172a;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 30px 16px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--border);
+    }
+    .header h1 {
+      font-size: 22px;
+      color: #0f172a;
+    }
+    .header p {
+      color: var(--text-muted);
+      font-size: 13.5px;
+    }
+    .badge {
+      display: inline-block;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      margin-bottom: 8px;
+    }
+    .tab-switcher {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      background: #e2e8f0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      color: #334155;
+    }
+    .tab-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #1e293b;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #334155;
+    }
+    label .req {
+      color: #ef4444;
+      font-size: 11.5px;
+    }
+    label .hint-label {
+      font-weight: 400;
+      font-size: 12px;
+      color: #64748b;
+      display: block;
+      margin-top: 1px;
+    }
+    input[type="text"], input[type="number"], input[type="date"], textarea, select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13.5px;
+      background: #ffffff;
+      outline: none;
+      transition: border 0.15s ease;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .btn-submit {
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 13.5px;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-submit:hover {
+      background: #0369a1;
+    }
+    .demo-info {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      margin-bottom: 18px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <span class="badge">Simulasi Pengujian Ekstensi</span>
+    <h1>Formulir Tambah Data Log Kegiatan</h1>
+    <p>Halaman ini meniru persis sistem input logbook PKL / Magang multi-kolom dan form umum untuk pengujian auto-fill.</p>
+  </div>
+
+  <div class="demo-info">
+    💡 <strong>Cara Menguji:</strong> Buka ekstensi <strong>JurnalMate AI</strong> di toolbar Chrome, klik tombol <strong>"Generate 5 Kolom STAR dengan AI"</strong>, lalu klik <strong>"⚡ Isi 5 Kolom ke Web"</strong>. Ekstensi akan otomatis mengisi Situasi, Tugas, Aksi, Hasil, Komentar, dan Pekan Ke seketika!
+  </div>
+
+  <div class="tab-switcher">
+    <button class="tab-btn active" id="btn-show-star">📋 Formulir PKL (STAR 5 Kolom)</button>
+    <button class="tab-btn" id="btn-show-single">📝 Formulir Jurnal Standar (1 Kolom)</button>
+  </div>
+
+  <!-- FORM 1: REPLIKA RESMI FORM PKL MULTI-KOLOM (STAR) -->
+  <div class="card" id="card-star">
+    <div class="card-title">Tambah Data Log Kegiatan (PKL / Magang)</div>
+    <form id="form-star-demo" onsubmit="event.preventDefault(); alert('Log Kegiatan PKL Berhasil Disimpan!');">
+      
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="pekan-ke">Pekan Ke</label>
+          <input type="number" id="pekan-ke" name="pekan_ke" value="9" placeholder="9">
+        </div>
+
+        <div class="form-group">
+          <label for="tgl-mulai">Tanggal Pelaksanaan Mulai</label>
+          <input type="text" id="tgl-mulai" name="tanggal_mulai" value="26-Okt-2026">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="tgl-akhir">Tanggal Pelaksanaan Akhir</label>
+        <input type="text" id="tgl-akhir" name="tanggal_akhir" value="01-Nov-2026">
+      </div>
+
+      <div class="form-group">
+        <label for="capaian-1">Capaian Pembelajaran 1 <span class="req">*(wajib diisi)</span></label>
+        <input type="text" id="capaian-1" placeholder="Apabila data tidak ada di pencarian, silahkan ketik saja...">
+      </div>
+
+      <div class="form-group">
+        <label for="sub-capaian-1">Sub Capaian Pembelajaran 1 <span class="req">*(wajib diisi)</span></label>
+        <input type="text" id="sub-capaian-1" placeholder="Apabila data tidak ada di pencarian, silahkan ketik saja...">
+      </div>
+
+      <!-- STAR Fields -->
+      <div class="form-group">
+        <label for="field-situation">
+          Situation (Situasi)
+          <span class="hint-label">Silahkan ceritakan situasi yang terjadi dengan detail selama kegiatan PKL pekan ini</span>
+        </label>
+        <textarea id="field-situation" name="situation" rows="4" placeholder="Kolom ini akan diisi otomatis dengan bagian Situation (Situasi)..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="field-task">
+          Task (Tugas)
+          <span class="hint-label">Silakan ceritakan tugas dan tanggung jawab yang dilakukan pada kegiatan PKL pekan ini</span>
+        </label>
+        <textarea id="field-task" name="task" rows="4" placeholder="Kolom ini akan diisi otomatis dengan bagian Task (Tugas)..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="field-action">
+          Action (Aksi)
+          <span class="hint-label">Silakan ceritakan aksi yang dilakukan untuk menyelesaikan tugas dan tanggung jawab kegiatan PKL pekan ini</span>
+        </label>
+        <textarea id="field-action" name="action" rows="4" placeholder="Kolom ini akan diisi otomatis dengan bagian Action (Aksi)..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="field-result">
+          Result (Hasil)
+          <span class="hint-label">Silakan ceritakan hasil yang didapatkan setelah melakukan aksi kegiatan PKL pekan ini</span>
+        </label>
+        <textarea id="field-result" name="result" rows="4" placeholder="Kolom ini akan diisi otomatis dengan bagian Result (Hasil)..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="field-komentar">
+          Komentar
+          <span class="hint-label">Silahkan ceritakan tantangan-hambatan, solusi dan tindak lanjut pada kegiatan PKL pekan ini</span>
+        </label>
+        <textarea id="field-komentar" name="komentar" rows="4" placeholder="Kolom ini akan diisi otomatis dengan bagian Komentar & Refleksi..."></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit">Simpan Log Kegiatan</button>
+    </form>
+  </div>
+
+  <!-- FORM 2: FORM 1-KOLOM UMUM -->
+  <div class="card hidden" id="card-single">
+    <div class="card-title">Formulir Jurnal Harian Umum (1 Kolom)</div>
+    <form id="form-single-demo" onsubmit="event.preventDefault(); alert('Jurnal berhasil disimpan!');">
+      <div class="form-group">
+        <label for="nama-user">Nama Pegawai</label>
+        <input type="text" id="nama-user" value="Aditya (Boss)" readonly>
+      </div>
+
+      <div class="form-group">
+        <label for="deskripsi-kegiatan">Deskripsi / Uraian Kegiatan</label>
+        <textarea id="deskripsi-kegiatan" name="jurnal_kegiatan" rows="6" placeholder="Kolom jurnal 1 kolom umum..."></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit">Simpan Jurnal</button>
+    </form>
+  </div>
+
+</div>
+
+<script>
+  const btnStar = document.getElementById('btn-show-star');
+  const btnSingle = document.getElementById('btn-show-single');
+  const cardStar = document.getElementById('card-star');
+  const cardSingle = document.getElementById('card-single');
+
+  btnStar.addEventListener('click', () => {
+    btnStar.classList.add('active');
+    btnSingle.classList.remove('active');
+    cardStar.classList.remove('hidden');
+    cardSingle.classList.add('hidden');
+  });
+
+  btnSingle.addEventListener('click', () => {
+    btnSingle.classList.add('active');
+    btnStar.classList.remove('active');
+    cardSingle.classList.remove('hidden');
+    cardStar.classList.add('hidden');
+  });
+</script>
+
+</body>
+</html>
