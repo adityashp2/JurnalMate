@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     result: '',
     komentar: ''
   };
-  let activeSection = 'perencanaan'; // 'perencanaan' | 'capaian' | 'subCapaian' | 'situation' | 'task' | 'action' | 'result' | 'komentar' | 'all'
+  let activeSection = 'situation'; // 'perencanaan' | 'capaian' | 'subCapaian' | 'situation' | 'task' | 'action' | 'result' | 'komentar' | 'all'
 
   const STAR_DESCS = {
     perencanaan: 'Perencanaan kegiatan PKL / agenda rencana kerja yang dirancang untuk pekan ini.',
@@ -133,14 +133,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnOpenOptions.addEventListener('click', openOptions);
   }
 
-  // Helper: Compile all STAR sections into formatted readable text
-  function compileAllStarText(data, pekan, jam) {
+  function saveHistory(item) {
+    let history = appConfig.history || [];
+    history.unshift(item);
+    if (history.length > 50) history = history.slice(0, 50);
+    chrome.storage.local.set({ history });
+    appConfig.history = history;
+    renderHistory();
+  }
+
+  // Helper: Compile STAR sections into formatted readable text
+  function compileStarText(data, pekan) {
     const parts = [];
     if (pekan) parts.push(`Pekan Ke: ${pekan}`);
-    if (jam) parts.push(`Jumlah Jam: ${jam} Jam`);
-    if (data.perencanaan) parts.push(`[Perencanaan Kegiatan PKL]\n${data.perencanaan}`);
-    if (data.capaian) parts.push(`[Capaian Kegiatan]\n${data.capaian}`);
-    if (data.subCapaian) parts.push(`[Sub Capaian Kegiatan]\n${data.subCapaian}`);
     if (data.situation) parts.push(`[Situation (Situasi)]\n${data.situation}`);
     if (data.task) parts.push(`[Task (Tugas)]\n${data.task}`);
     if (data.action) parts.push(`[Action (Aksi)]\n${data.action}`);
@@ -149,12 +154,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     return parts.join('\n\n');
   }
 
+  // Helper: Compile Perencanaan PKL sections into formatted readable text
+  function compilePerencanaanText(data, pekan, jam) {
+    const parts = [];
+    if (pekan) parts.push(`Pekan Ke: ${pekan}`);
+    if (jam) parts.push(`Jumlah Jam: ${jam} Jam (Standar 48 Jam)`);
+    if (data.perencanaan) parts.push(`[Perencanaan Kegiatan PKL]\n${data.perencanaan}`);
+    if (data.capaian) parts.push(`[Capaian Kegiatan]\n${data.capaian}`);
+    if (data.subCapaian) parts.push(`[Sub Capaian Kegiatan]\n${data.subCapaian}`);
+    return parts.join('\n\n');
+  }
+
+  function compileAllStarText(data, pekan, jam) {
+    const isPerencanaan = selCategory && selCategory.value === 'perencanaan_pkl';
+    return isPerencanaan ? compilePerencanaanText(data, pekan, jam) : compileStarText(data, pekan);
+  }
+
   // Load Section Content into Textarea Output
   function loadSectionToOutput(section) {
     if (!txtOutput) return;
 
     if (section === 'all') {
-      txtOutput.value = compileAllStarText(starData, inputPekan ? inputPekan.value : '', inputJam ? inputJam.value : '48');
+      const isPerencanaan = selCategory && selCategory.value === 'perencanaan_pkl';
+      txtOutput.value = isPerencanaan
+        ? compilePerencanaanText(starData, inputPekan ? inputPekan.value : '', inputJam ? inputJam.value : '48')
+        : compileStarText(starData, inputPekan ? inputPekan.value : '');
     } else {
       txtOutput.value = starData[section] || '';
     }
@@ -183,18 +207,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Update Category / Mode (STAR vs 1-Kolom)
+  // Update Category / Mode (STAR vs Perencanaan vs 1-Kolom)
   function updateCategoryMode() {
-    const isStar = selCategory.value === 'star';
+    const cat = selCategory.value;
+    const isStar = cat === 'star';
+    const isPerencanaan = cat === 'perencanaan_pkl';
+    const pillsStar = document.querySelectorAll('.pill-star');
+    const pillsPerencanaan = document.querySelectorAll('.pill-perencanaan');
+
     if (isStar) {
+      if (colPekan) colPekan.classList.remove('hidden');
+      if (colJam) colJam.classList.add('hidden');
+      if (colStyle) colStyle.classList.add('hidden');
+      if (starPillsBar) starPillsBar.classList.remove('hidden');
+      if (starFieldDesc) starFieldDesc.classList.remove('hidden');
+
+      pillsStar.forEach(p => p.classList.remove('hidden'));
+      pillsPerencanaan.forEach(p => p.classList.add('hidden'));
+
+      if (draftTitle) draftTitle.textContent = 'Draft Logbook STAR (5 Kolom)';
+      if (btnAutofillText) btnAutofillText.textContent = 'Isi 5 Kolom ke Web';
+      if (btnGenerateText) btnGenerateText.textContent = 'Generate 5 Kolom STAR (AI)';
+
+      if (!['situation', 'task', 'action', 'result', 'komentar', 'all'].includes(activeSection)) {
+        activeSection = 'situation';
+      }
+      starPills.forEach(p => {
+        if (p.dataset.section === activeSection) p.classList.add('active');
+        else p.classList.remove('active');
+      });
+      loadSectionToOutput(activeSection);
+    } else if (isPerencanaan) {
       if (colPekan) colPekan.classList.remove('hidden');
       if (colJam) colJam.classList.remove('hidden');
       if (colStyle) colStyle.classList.add('hidden');
       if (starPillsBar) starPillsBar.classList.remove('hidden');
       if (starFieldDesc) starFieldDesc.classList.remove('hidden');
-      if (draftTitle) draftTitle.textContent = 'Draft Logbook PKL & STAR';
-      if (btnAutofillText) btnAutofillText.textContent = 'Isi Logbook ke Web';
-      if (btnGenerateText) btnGenerateText.textContent = 'Generate Logbook PKL & STAR (AI)';
+
+      pillsStar.forEach(p => p.classList.add('hidden'));
+      pillsPerencanaan.forEach(p => p.classList.remove('hidden'));
+
+      if (draftTitle) draftTitle.textContent = 'Draft Perencanaan Kegiatan PKL (48 Jam)';
+      if (btnAutofillText) btnAutofillText.textContent = 'Isi Perencanaan ke Web';
+      if (btnGenerateText) btnGenerateText.textContent = 'Generate Perencanaan PKL (AI)';
+
+      if (!['perencanaan', 'capaian', 'subCapaian', 'all'].includes(activeSection)) {
+        activeSection = 'perencanaan';
+      }
+      starPills.forEach(p => {
+        if (p.dataset.section === activeSection) p.classList.add('active');
+        else p.classList.remove('active');
+      });
       loadSectionToOutput(activeSection);
     } else {
       if (colPekan) colPekan.classList.add('hidden');
@@ -202,6 +265,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (colStyle) colStyle.classList.remove('hidden');
       if (starPillsBar) starPillsBar.classList.add('hidden');
       if (starFieldDesc) starFieldDesc.classList.add('hidden');
+
+      pillsStar.forEach(p => p.classList.add('hidden'));
+      pillsPerencanaan.forEach(p => p.classList.add('hidden'));
+
       if (draftTitle) draftTitle.textContent = 'Draft Jurnal';
       if (btnAutofillText) btnAutofillText.textContent = 'Isi Otomatis ke Web';
       if (btnGenerateText) btnGenerateText.textContent = 'Generate Jurnal dengan AI';
@@ -230,7 +297,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Track text updates in real time
   txtOutput.addEventListener('input', () => {
-    if (selCategory.value === 'star' && activeSection !== 'all') {
+    const cat = selCategory.value;
+    if ((cat === 'star' || cat === 'perencanaan_pkl') && activeSection !== 'all') {
       starData[activeSection] = txtOutput.value;
       updatePillFilledStatus();
     }
@@ -756,42 +824,69 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        if (isStar) {
+        const isPerencanaan = selCategory.value === 'perencanaan_pkl';
+
+        if (isStar || isPerencanaan) {
           if (activeSection !== 'all') {
             starData[activeSection] = txtOutput.value;
           }
 
-          const hasContent = Object.values(starData).some(v => v && v.trim().length > 0);
-          if (!hasContent) {
-            showToast('Generate logbook STAR terlebih dahulu sebelum auto-fill.', true);
-            return;
-          }
-
-          chrome.tabs.sendMessage(tab.id, {
-            action: 'AUTO_FILL_MULTI',
-            data: {
-              pekan: inputPekan ? inputPekan.value : '9',
-              jam: inputJam ? inputJam.value : '48',
-              perencanaan: starData.perencanaan,
-              capaian: starData.capaian,
-              subCapaian: starData.subCapaian,
-              situation: starData.situation,
-              task: starData.task,
-              action: starData.action,
-              result: starData.result,
-              komentar: starData.komentar
-            }
-          }, (response) => {
-            if (chrome.runtime.lastError) {
-              showToast(`Gagal: ${chrome.runtime.lastError.message}. Refresh tab web target.`, true);
+          if (isStar) {
+            const hasStarContent = ['situation', 'task', 'action', 'result', 'komentar'].some(k => starData[k] && starData[k].trim().length > 0);
+            if (!hasStarContent) {
+              showToast('Generate logbook STAR terlebih dahulu sebelum auto-fill.', true);
               return;
             }
-            if (response && response.success) {
-              showToast(`⚡ Berhasil mengisi ${response.count || 8} kolom logbook ke web!`);
-            } else {
-              showToast('Kolom tidak cocok otomatis. Coba tombol "Pilih Kolom Web".', true);
+
+            chrome.tabs.sendMessage(tab.id, {
+              action: 'AUTO_FILL_MULTI',
+              data: {
+                pekan: inputPekan ? inputPekan.value : '9',
+                situation: starData.situation,
+                task: starData.task,
+                action: starData.action,
+                result: starData.result,
+                komentar: starData.komentar
+              }
+            }, (response) => {
+              if (chrome.runtime.lastError) {
+                showToast(`Gagal: ${chrome.runtime.lastError.message}. Refresh tab web target.`, true);
+                return;
+              }
+              if (response && response.success) {
+                showToast(`⚡ Berhasil mengisi ${response.count || 5} kolom STAR ke web!`);
+              } else {
+                showToast('Kolom tidak cocok otomatis. Coba tombol "Pilih Kolom Web".', true);
+              }
+            });
+          } else {
+            const hasPerencanaanContent = ['perencanaan', 'capaian', 'subCapaian'].some(k => starData[k] && starData[k].trim().length > 0);
+            if (!hasPerencanaanContent) {
+              showToast('Generate Perencanaan PKL terlebih dahulu sebelum auto-fill.', true);
+              return;
             }
-          });
+
+            chrome.tabs.sendMessage(tab.id, {
+              action: 'AUTO_FILL_MULTI',
+              data: {
+                pekan: inputPekan ? inputPekan.value : '9',
+                jam: inputJam ? inputJam.value : '48',
+                perencanaan: starData.perencanaan,
+                capaian: starData.capaian,
+                subCapaian: starData.subCapaian
+              }
+            }, (response) => {
+              if (chrome.runtime.lastError) {
+                showToast(`Gagal: ${chrome.runtime.lastError.message}. Refresh tab web target.`, true);
+                return;
+              }
+              if (response && response.success) {
+                showToast(`⚡ Berhasil mengisi ${response.count || 5} kolom Perencanaan PKL ke web!`);
+              } else {
+                showToast('Kolom tidak cocok otomatis. Coba tombol "Pilih Kolom Web".', true);
+              }
+            });
+          }
         } else {
           // Single-column mode
           const text = txtOutput.value.trim();
@@ -870,6 +965,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const isStar = selCategory.value === 'star';
+      const isPerencanaan = selCategory.value === 'perencanaan_pkl';
       const category = selCategory.value;
       const style = selStyle ? selStyle.value : 'formal';
       const model = appConfig.geminiModel || 'gemini-3.5-flash-lite';
@@ -878,15 +974,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       btnGenerateAi.disabled = true;
       spinnerGenerate.classList.remove('hidden');
-      btnGenerateText.textContent = isStar ? 'Menyusun Logbook PKL & STAR...' : 'Menyusun Jurnal dengan AI...';
+      if (isStar) {
+        btnGenerateText.textContent = 'Menyusun Logbook 5 Kolom STAR...';
+      } else if (isPerencanaan) {
+        btnGenerateText.textContent = 'Menyusun Perencanaan PKL (48j)...';
+      } else {
+        btnGenerateText.textContent = 'Menyusun Jurnal dengan AI...';
+      }
 
       try {
         if (isStar) {
-          const generatedStar = await callGeminiStarApi(apiKey, model, notes, pekanVal, jamVal);
-          starData = generatedStar;
+          const generatedStar = await callGeminiStarApi(apiKey, model, notes, pekanVal);
+          Object.assign(starData, generatedStar);
+          activeSection = 'situation';
+
+          starPills.forEach(p => {
+            if (p.dataset.section === 'situation') p.classList.add('active');
+            else p.classList.remove('active');
+          });
+
+          loadSectionToOutput('situation');
+
+          const fullContent = compileStarText(starData, pekanVal);
+          saveHistory({
+            timestamp: new Date().toISOString(),
+            category: `PKL STAR (Pekan ${pekanVal})`,
+            content: fullContent,
+            isStar: true,
+            starData: { ...starData },
+            pekan: pekanVal
+          });
+
+          showToast('✨ 5 Kolom Logbook STAR berhasil disusun!');
+        } else if (isPerencanaan) {
+          const generatedPerencanaan = await callGeminiPerencanaanApi(apiKey, model, notes, pekanVal, jamVal);
+          Object.assign(starData, generatedPerencanaan);
           activeSection = 'perencanaan';
 
-          // Reset pill active state
           starPills.forEach(p => {
             if (p.dataset.section === 'perencanaan') p.classList.add('active');
             else p.classList.remove('active');
@@ -894,44 +1018,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           loadSectionToOutput('perencanaan');
 
-          // Automatically save to history
-          const fullContent = compileAllStarText(starData, pekanVal, jamVal);
-          const historyItem = {
+          const fullContent = compilePerencanaanText(starData, pekanVal, jamVal);
+          saveHistory({
             timestamp: new Date().toISOString(),
-            category: `PKL STAR (Pekan ${pekanVal} • ${jamVal}j)`,
+            category: `Perencanaan PKL (Pekan ${pekanVal} • ${jamVal}j)`,
             content: fullContent,
             isStar: true,
             starData: { ...starData },
             pekan: pekanVal,
             jam: jamVal
-          };
-          let history = appConfig.history || [];
-          history.unshift(historyItem);
-          if (history.length > 50) history = history.slice(0, 50);
-          await chrome.storage.local.set({ history });
-          appConfig.history = history;
-          renderHistory();
+          });
 
-          showToast('✨ Logbook PKL & 5 Kolom STAR berhasil disusun!');
+          showToast('✨ Perencanaan Kegiatan PKL (48 Jam) berhasil disusun!');
         } else {
-          // Single-column narrative generation
           const generatedJournal = await callGeminiSingleApi(apiKey, model, category, style, notes);
           txtOutput.value = generatedJournal;
           updateWordAndCharCount();
 
           const categoryText = selCategory.options[selCategory.selectedIndex].text.split(' ')[0] || 'Jurnal';
-          const historyItem = {
+          saveHistory({
             timestamp: new Date().toISOString(),
             category: categoryText,
             content: generatedJournal,
             isStar: false
-          };
-          let history = appConfig.history || [];
-          history.unshift(historyItem);
-          if (history.length > 50) history = history.slice(0, 50);
-          await chrome.storage.local.set({ history });
-          appConfig.history = history;
-          renderHistory();
+          });
 
           showToast('✨ Jurnal berhasil dibuat oleh AI!');
         }
@@ -941,9 +1051,124 @@ document.addEventListener('DOMContentLoaded', async () => {
       } finally {
         btnGenerateAi.disabled = false;
         spinnerGenerate.classList.add('hidden');
-        btnGenerateText.textContent = isStar ? 'Generate Logbook PKL & STAR (AI)' : 'Generate Jurnal dengan AI';
+        if (isStar) {
+          btnGenerateText.textContent = 'Generate 5 Kolom STAR (AI)';
+        } else if (isPerencanaan) {
+          btnGenerateText.textContent = 'Generate Perencanaan PKL (AI)';
+        } else {
+          btnGenerateText.textContent = 'Generate Jurnal dengan AI';
+        }
       }
     });
+  }
+
+  // Call Gemini for Perencanaan Kegiatan PKL (48 Jam)
+  async function callGeminiPerencanaanApi(apiKey, model, notes, pekan, jam) {
+    const todayDate = new Date().toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const fullPrompt = `
+Anda adalah asisten AI profesional untuk pembuatan Perencanaan Kegiatan dan Capaian PKL (Praktik Kerja Lapangan / Magang) mahasiswa di Indonesia.
+Dokumen ini difokuskan pada perencanaan agenda kegiatan mingguan, target capaian kompetensi, dan sub-capaian indikator teknis.
+
+Pekan Ke: ${pekan || '9'}
+Jumlah Jam Kegiatan: ${jam || '48'} Jam (Standar Beban PKL: 48 Jam)
+Hari/Tanggal: ${todayDate}
+Poin Kegiatan / Rencana Kasar Mahasiswa:
+"""
+${notes}
+"""
+
+Instruksi Khusus:
+Susun menjadi 3 bagian yang formal, terstruktur, berbasis kompetensi (bahasa Indonesia baku EYD), dan siap diisi ke formulir PKL:
+1. perencanaan: Perencanaan kegiatan PKL / agenda rencana kerja komprehensif yang dirancang untuk pekan ini (1-2 paragraf terarah).
+2. capaian: Capaian kegiatan / target kompetensi utama yang berhasil dicapai selama kegiatan PKL pekan ini.
+3. subCapaian: Sub capaian kegiatan / rincian kompetensi spesifik atau modul/tugas teknis yang dituntaskan.
+
+FORMAT OUTPUT WAJIB: KEMBALIKAN HANYA JSON VALID MURNI TANPA MARKDOWN FENCE:
+{
+  "perencanaan": "...",
+  "capaian": "...",
+  "subCapaian": "..."
+}
+`;
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.65,
+          topK: 40,
+          topP: 0.95
+        }
+      })
+    });
+
+    if (!response.ok) {
+      let errDetail = '';
+      try {
+        const errJson = await response.json();
+        errDetail = errJson.error?.message || response.statusText;
+      } catch (e) {
+        errDetail = response.statusText;
+      }
+      throw new Error(`Gemini API Error (${response.status}): ${errDetail}`);
+    }
+
+    const data = await response.json();
+    const candidate = data.candidates?.[0];
+    const parts = candidate?.content?.parts || [];
+    const textPart = parts
+      .filter(p => typeof p.text === 'string')
+      .map(p => p.text)
+      .join('\n');
+
+    if (!textPart || !textPart.trim()) {
+      throw new Error('AI tidak mengembalikan respon teks.');
+    }
+
+    return parsePerencanaanResponse(textPart.trim());
+  }
+
+  function parsePerencanaanResponse(raw) {
+    let clean = raw.trim();
+    const startIdx = clean.indexOf('{');
+    const endIdx = clean.lastIndexOf('}');
+    if (startIdx !== -1 && endIdx !== -1) {
+      clean = clean.slice(startIdx, endIdx + 1);
+    }
+
+    try {
+      const json = JSON.parse(clean);
+      return {
+        perencanaan: json.perencanaan || json.rencana || '',
+        capaian: json.capaian || json.capaianKegiatan || '',
+        subCapaian: json.subCapaian || json.sub_capaian || json.subCapaianKegiatan || ''
+      };
+    } catch (e) {
+      console.warn('JSON parse error in parsePerencanaanResponse:', e);
+    }
+
+    function extractBetween(text, startPattern, endPattern) {
+      const regex = new RegExp(`(?:\${startPattern})[:\\s]*([\\s\\S]*?)(?=(?:\${endPattern})|$)`, 'i');
+      const match = text.match(regex);
+      return match ? match[1].replace(/^[":\s]+|[",\s]+$/g, '').trim() : '';
+    }
+
+    return {
+      perencanaan: extractBetween(clean, 'perencanaan|rencana', 'subCapaian|sub_capaian|capaian') || clean,
+      capaian: extractBetween(clean, 'capaian', 'subCapaian|sub_capaian'),
+      subCapaian: extractBetween(clean, 'subCapaian|sub_capaian', '$')
+    };
   }
 
   // Call Gemini for Multi-Column STAR Logbook
