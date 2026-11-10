@@ -114,6 +114,11 @@
             <input type="number" id="journal-pekan" class="field-input-sm" value="9" min="1" max="52" placeholder="9">
           </div>
 
+          <div class="field-item" id="col-jam">
+            <label for="journal-jam" class="field-label">Jam (48j)</label>
+            <input type="number" id="journal-jam" class="field-input-sm" value="48" min="1" max="168" placeholder="48" title="Jumlah Jam Kegiatan PKL (Default: 48 Jam)">
+          </div>
+
           <div class="field-item hidden" id="col-style">
             <label for="journal-style" class="field-label">Gaya Bahasa</label>
             <div class="select-wrapper">
@@ -144,13 +149,13 @@
             <path
               d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
           </svg>
-          <span id="btn-generate-text">Generate 5 Kolom STAR dengan AI</span>
+          <span id="btn-generate-text">Generate Logbook PKL & STAR (AI)</span>
         </button>
 
         <!-- Result Section -->
         <div id="journal-result-container" class="surface-card">
           <div class="surface-header">
-            <span class="surface-title" id="draft-title">Draft Logbook STAR (5 Kolom)</span>
+            <span class="surface-title" id="draft-title">Draft Logbook PKL & STAR</span>
             <div class="surface-meta">
               <span id="word-count">0 kata</span> • <span id="char-count">0 karakter</span>
             </div>
@@ -158,22 +163,31 @@
 
           <!-- Section Pills (Active in STAR mode) -->
           <div id="star-pills-bar" class="star-nav-pills">
-            <button type="button" class="star-pill active" data-section="situation">
+            <button type="button" class="star-pill" data-section="perencanaan" title="Perencanaan Kegiatan PKL">
+              <span class="pill-dot"></span> Rencana
+            </button>
+            <button type="button" class="star-pill" data-section="capaian" title="Capaian Kegiatan">
+              <span class="pill-dot"></span> Capaian
+            </button>
+            <button type="button" class="star-pill" data-section="subCapaian" title="Sub Capaian Kegiatan">
+              <span class="pill-dot"></span> Sub-Capaian
+            </button>
+            <button type="button" class="star-pill active" data-section="situation" title="Situation (Situasi)">
               <span class="pill-dot"></span> Situasi
             </button>
-            <button type="button" class="star-pill" data-section="task">
+            <button type="button" class="star-pill" data-section="task" title="Task (Tugas)">
               <span class="pill-dot"></span> Tugas
             </button>
-            <button type="button" class="star-pill" data-section="action">
+            <button type="button" class="star-pill" data-section="action" title="Action (Aksi)">
               <span class="pill-dot"></span> Aksi
             </button>
-            <button type="button" class="star-pill" data-section="result">
+            <button type="button" class="star-pill" data-section="result" title="Result (Hasil)">
               <span class="pill-dot"></span> Hasil
             </button>
-            <button type="button" class="star-pill" data-section="komentar">
+            <button type="button" class="star-pill" data-section="komentar" title="Komentar / Tantangan & Solusi">
               <span class="pill-dot"></span> Komentar
             </button>
-            <button type="button" class="star-pill pill-all" data-section="all" title="Lihat gabungan seluruh kolom">
+            <button type="button" class="star-pill pill-all" data-section="all" title="Lihat gabungan seluruh data logbook">
               Semua
             </button>
           </div>
@@ -194,7 +208,7 @@
                 stroke-width="2">
                 <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
               </svg>
-              <span id="btn-autofill-text">Isi 5 Kolom ke Web</span>
+              <span id="btn-autofill-text">Isi Logbook ke Web</span>
             </button>
 
             <button id="btn-pick-web" class="btn btn-secondary"
@@ -413,6 +427,11 @@
 
     <!-- Global Toast -->
     <div id="popup-toast" class="toast-popup hidden"></div>
+
+    <!-- Footer Credits -->
+    <footer class="app-footer">
+      <span>JurnalMate AI • by Techfdit</span>
+    </footer>
 
   </div>
 

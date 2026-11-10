@@ -326,7 +326,7 @@ function getElementSearchText(el) {
 }
 
 function autoFillMultiColumns(data) {
-  // 1. Separate and sort textareas by vertical DOM position (top to bottom)
+  // 1. Separate and sort textareas and inputs
   const allTextareas = Array.from(document.querySelectorAll('textarea, [contenteditable="true"]'))
     .filter(el => {
       const rect = el.getBoundingClientRect();
@@ -338,7 +338,8 @@ function autoFillMultiColumns(data) {
     .filter(el => {
       const rect = el.getBoundingClientRect();
       return rect.width > 0 && rect.height > 0 && !el.disabled && !el.readOnly;
-    });
+    })
+    .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
 
   if (allTextareas.length === 0 && allInputs.length === 0) {
     showToast('Kolom Tidak Ditemukan', 'Tidak ada kolom formulir aktif di halaman ini.', false);
@@ -348,25 +349,106 @@ function autoFillMultiColumns(data) {
   const assignedElements = new Set();
   const filledFields = [];
 
+  // Helper matcher function
+  function findBestCandidate(candidates, keywords, excludeKeywords = []) {
+    let bestEl = null;
+    let highestScore = 0;
+
+    for (const el of candidates) {
+      if (assignedElements.has(el)) continue;
+      const searchText = getElementSearchText(el);
+
+      if (excludeKeywords.some(ex => searchText.includes(ex))) {
+        continue;
+      }
+
+      let score = 0;
+      for (const kw of keywords) {
+        if (searchText.includes(kw)) {
+          score += (kw.length > 5 ? 60 : 35);
+          if ((el.id && el.id.toLowerCase().includes(kw)) || (el.name && el.name.toLowerCase().includes(kw))) {
+            score += 25;
+          }
+        }
+      }
+
+      if (score > highestScore && score >= 30) {
+        highestScore = score;
+        bestEl = el;
+      }
+    }
+
+    return bestEl;
+  }
+
   // Step 1: Match Pekan Ke input
   if (data.pekan) {
-    for (const inp of allInputs) {
-      const txt = getElementSearchText(inp);
-      if (txt.includes('pekan') || txt.includes('minggu') || txt.includes('week')) {
-        injectValueToElement(inp, String(data.pekan));
-        assignedElements.add(inp);
-        filledFields.push('Pekan Ke');
-        break;
-      }
+    const el = findBestCandidate(allInputs, ['pekan ke', 'pekan', 'minggu ke', 'minggu', 'week']);
+    if (el) {
+      injectValueToElement(el, String(data.pekan));
+      assignedElements.add(el);
+      filledFields.push('Pekan Ke');
     }
   }
 
-  // Step 2: Match 5 STAR Textareas by keywords
+  // Step 2: Match Jumlah Jam input (Default: 48 Jam)
+  if (data.jam) {
+    const el = findBestCandidate(allInputs, ['jumlah jam', 'total jam', 'jam kegiatan', 'jam pkl', 'durasi jam', 'banyak jam', 'jam']);
+    if (el) {
+      injectValueToElement(el, String(data.jam));
+      assignedElements.add(el);
+      filledFields.push('Jumlah Jam');
+    }
+  }
+
+  // Combined candidates for text fields (can be input or textarea)
+  const allEditableCandidates = [...allInputs, ...allTextareas];
+
+  // Step 3: Match Sub Capaian Kegiatan (Matched before Capaian to avoid conflict)
+  if (data.subCapaian) {
+    const el = findBestCandidate(allEditableCandidates, [
+      'sub capaian kegiatan', 'sub capain kegiatan', 'sub capaian pembelajaran',
+      'sub capaian', 'sub capain', 'sub-capaian', 'subcapaian'
+    ]);
+    if (el) {
+      injectValueToElement(el, String(data.subCapaian));
+      assignedElements.add(el);
+      filledFields.push('Sub Capaian');
+    }
+  }
+
+  // Step 4: Match Capaian Kegiatan (Excluded 'sub')
+  if (data.capaian) {
+    const el = findBestCandidate(allEditableCandidates, [
+      'capaian kegiatan', 'capain kegiatan', 'capaian pembelajaran',
+      'capaian logbook', 'capaian pkl', 'capaian', 'capain'
+    ], ['sub']);
+    if (el) {
+      injectValueToElement(el, String(data.capaian));
+      assignedElements.add(el);
+      filledFields.push('Capaian Kegiatan');
+    }
+  }
+
+  // Step 5: Match Perencanaan Kegiatan PKL
+  if (data.perencanaan) {
+    const el = findBestCandidate(allEditableCandidates, [
+      'perencanaan kegiatan pkl', 'perencanaan kegiatan', 'perencanaan pkl',
+      'rencana kegiatan', 'rencana pkl', 'perencanaan', 'rencana'
+    ]);
+    if (el) {
+      injectValueToElement(el, String(data.perencanaan));
+      assignedElements.add(el);
+      filledFields.push('Perencanaan PKL');
+    }
+  }
+
+  // Step 6: Match 5 STAR Textareas by keywords
   const starKeys = [
-    { key: 'situation', name: 'Situasi', keywords: ['situation', 'situasi', 'kondisi', 'latar belakang', 'lingkungan'] },
-    { key: 'task', name: 'Tugas', keywords: ['task', 'tugas', 'tanggung jawab', 'penugasan', 'sasaran'] },
-    { key: 'action', name: 'Aksi', keywords: ['action', 'aksi', 'tindakan', 'pelaksanaan', 'implementasi', 'langkah'] },
-    { key: 'result', name: 'Hasil', keywords: ['result', 'hasil', 'capaian', 'output', 'dampak', 'pencapaian'] },
+    { key: 'situation', name: 'Situasi', keywords: ['situation', 'situasi', 'kondisi', 'latar belakang', 'lingkungan', 'ceritakan situasi'] },
+    { key: 'task', name: 'Tugas', keywords: ['task', 'tugas', 'tanggung jawab', 'penugasan', 'sasaran', 'ceritakan tugas'] },
+    { key: 'action', name: 'Aksi', keywords: ['action', 'aksi', 'tindakan', 'pelaksanaan', 'implementasi', 'langkah', 'ceritakan aksi'] },
+    { key: 'result', name: 'Hasil', keywords: ['result', 'hasil', 'output', 'dampak', 'pencapaian', 'ceritakan hasil'], exclude: ['capaian', 'capain'] },
     { key: 'komentar', name: 'Komentar', keywords: ['komentar', 'tantangan', 'hambatan', 'kendala', 'solusi', 'tindak lanjut', 'evaluasi', 'refleksi'] }
   ];
 
@@ -374,34 +456,15 @@ function autoFillMultiColumns(data) {
     const val = data[item.key];
     if (!val) continue;
 
-    let bestEl = null;
-    let highestScore = 0;
-
-    for (const ta of allTextareas) {
-      if (assignedElements.has(ta)) continue;
-      const searchText = getElementSearchText(ta);
-      let score = 0;
-
-      for (const kw of item.keywords) {
-        if (searchText.includes(kw)) {
-          score += (kw.length > 5 ? 60 : 40);
-        }
-      }
-
-      if (score > highestScore && score >= 30) {
-        highestScore = score;
-        bestEl = ta;
-      }
-    }
-
-    if (bestEl) {
-      assignedElements.add(bestEl);
-      injectValueToElement(bestEl, String(val));
+    const el = findBestCandidate(allTextareas, item.keywords, item.exclude || []);
+    if (el) {
+      assignedElements.add(el);
+      injectValueToElement(el, String(val));
       filledFields.push(item.name);
     }
   }
 
-  // Step 3: For any STAR keys that were not matched by keyword, map to remaining unassigned textareas in sequential order!
+  // Step 7: For any STAR keys that were not matched by keyword, map to remaining unassigned textareas sequentially
   const unassignedKeys = starKeys.filter(item => data[item.key] && !filledFields.includes(item.name));
   const unassignedTextareas = allTextareas.filter(ta => !assignedElements.has(ta));
 
@@ -414,14 +477,13 @@ function autoFillMultiColumns(data) {
   }
 
   if (filledFields.length > 0) {
-    showToast(`Berhasil Mengisi ${filledFields.length} Kolom! ✨`, `Kolom: ${filledFields.join(', ')} telah diisi otomatis.`);
+    showToast(`Berhasil Mengisi ${filledFields.length} Kolom! ✨`, `Kolom terisi: ${filledFields.join(', ')}.`);
     return { success: true, count: filledFields.length, filledFields };
   } else {
     showToast('Kolom Tidak Cocok', 'Tidak dapat mencocokkan kolom PKL. Gunakan tombol "Pilih Kolom Web".', false);
     return { success: false, reason: 'NO_MATCHING_FIELDS' };
   }
 }
-
 // Runtime message listener from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'AUTO_FILL_MULTI') {

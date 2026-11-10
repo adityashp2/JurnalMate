@@ -18,8 +18,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const selCategory = document.getElementById('journal-category');
   const selStyle = document.getElementById('journal-style');
   const colPekan = document.getElementById('col-pekan');
+  const colJam = document.getElementById('col-jam');
   const colStyle = document.getElementById('col-style');
   const inputPekan = document.getElementById('journal-pekan');
+  const inputJam = document.getElementById('journal-jam');
   const txtNotes = document.getElementById('journal-notes');
   const btnGenerateAi = document.getElementById('btn-generate-ai');
   const btnGenerateText = document.getElementById('btn-generate-text');
@@ -77,23 +79,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   // App State
   let appConfig = {};
 
-  // STAR Multi-Column State
+  // STAR & PKL Multi-Column State
   let starData = {
+    perencanaan: '',
+    capaian: '',
+    subCapaian: '',
     situation: '',
     task: '',
     action: '',
     result: '',
     komentar: ''
   };
-  let activeSection = 'situation'; // 'situation' | 'task' | 'action' | 'result' | 'komentar' | 'all'
+  let activeSection = 'perencanaan'; // 'perencanaan' | 'capaian' | 'subCapaian' | 'situation' | 'task' | 'action' | 'result' | 'komentar' | 'all'
 
   const STAR_DESCS = {
+    perencanaan: 'Perencanaan kegiatan PKL / agenda rencana kerja yang dirancang untuk pekan ini.',
+    capaian: 'Capaian kegiatan / target kompetensi utama yang berhasil dicapai selama kegiatan PKL.',
+    subCapaian: 'Sub capaian kegiatan / rincian kompetensi spesifik dan indikator performa teknis yang dipenuhi.',
     situation: 'Silahkan ceritakan situasi yang terjadi dengan detail selama kegiatan PKL pekan ini.',
     task: 'Silakan ceritakan tugas dan tanggung jawab yang dilakukan pada kegiatan PKL pekan ini.',
     action: 'Silakan ceritakan aksi yang dilakukan untuk menyelesaikan tugas dan tanggung jawab kegiatan PKL pekan ini.',
     result: 'Silakan ceritakan hasil yang didapatkan setelah melakukan aksi kegiatan PKL pekan ini.',
     komentar: 'Silahkan ceritakan tantangan-hambatan, solusi dan tindak lanjut pada kegiatan PKL pekan ini.',
-    all: 'Tampilan lengkap gabungan seluruh kolom logbook STAR (Pekan, Situasi, Tugas, Aksi, Hasil, Komentar).'
+    all: 'Tampilan lengkap gabungan seluruh kolom logbook PKL (Pekan, Jam 48j, Rencana, Capaian, Sub-Capaian, STAR, Komentar).'
   };
 
   // Show Toast Inside Popup
@@ -126,9 +134,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Helper: Compile all STAR sections into formatted readable text
-  function compileAllStarText(data, pekan) {
+  function compileAllStarText(data, pekan, jam) {
     const parts = [];
     if (pekan) parts.push(`Pekan Ke: ${pekan}`);
+    if (jam) parts.push(`Jumlah Jam: ${jam} Jam`);
+    if (data.perencanaan) parts.push(`[Perencanaan Kegiatan PKL]\n${data.perencanaan}`);
+    if (data.capaian) parts.push(`[Capaian Kegiatan]\n${data.capaian}`);
+    if (data.subCapaian) parts.push(`[Sub Capaian Kegiatan]\n${data.subCapaian}`);
     if (data.situation) parts.push(`[Situation (Situasi)]\n${data.situation}`);
     if (data.task) parts.push(`[Task (Tugas)]\n${data.task}`);
     if (data.action) parts.push(`[Action (Aksi)]\n${data.action}`);
@@ -142,7 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!txtOutput) return;
 
     if (section === 'all') {
-      txtOutput.value = compileAllStarText(starData, inputPekan ? inputPekan.value : '');
+      txtOutput.value = compileAllStarText(starData, inputPekan ? inputPekan.value : '', inputJam ? inputJam.value : '48');
     } else {
       txtOutput.value = starData[section] || '';
     }
@@ -176,15 +188,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isStar = selCategory.value === 'star';
     if (isStar) {
       if (colPekan) colPekan.classList.remove('hidden');
+      if (colJam) colJam.classList.remove('hidden');
       if (colStyle) colStyle.classList.add('hidden');
       if (starPillsBar) starPillsBar.classList.remove('hidden');
       if (starFieldDesc) starFieldDesc.classList.remove('hidden');
-      if (draftTitle) draftTitle.textContent = 'Draft Logbook STAR (5 Kolom)';
-      if (btnAutofillText) btnAutofillText.textContent = 'Isi 5 Kolom ke Web';
-      if (btnGenerateText) btnGenerateText.textContent = 'Generate 5 Kolom STAR dengan AI';
+      if (draftTitle) draftTitle.textContent = 'Draft Logbook PKL & STAR';
+      if (btnAutofillText) btnAutofillText.textContent = 'Isi Logbook ke Web';
+      if (btnGenerateText) btnGenerateText.textContent = 'Generate Logbook PKL & STAR (AI)';
       loadSectionToOutput(activeSection);
     } else {
       if (colPekan) colPekan.classList.add('hidden');
+      if (colJam) colJam.classList.add('hidden');
       if (colStyle) colStyle.classList.remove('hidden');
       if (starPillsBar) starPillsBar.classList.add('hidden');
       if (starFieldDesc) starFieldDesc.classList.add('hidden');
@@ -514,13 +528,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             starData = { ...item.starData };
             selCategory.value = 'star';
             if (inputPekan && item.pekan) inputPekan.value = item.pekan;
+            if (inputJam && item.jam) inputJam.value = item.jam;
             updateCategoryMode();
-            activeSection = 'situation';
+            activeSection = 'perencanaan';
             starPills.forEach(p => {
-              if (p.dataset.section === 'situation') p.classList.add('active');
+              if (p.dataset.section === 'perencanaan') p.classList.add('active');
               else p.classList.remove('active');
             });
-            loadSectionToOutput('situation');
+            loadSectionToOutput('perencanaan');
           } else {
             selCategory.value = 'kantor';
             updateCategoryMode();
@@ -669,8 +684,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (activeSection !== 'all') {
           starData[activeSection] = txtOutput.value;
         }
-        contentToSave = compileAllStarText(starData, inputPekan ? inputPekan.value : '9');
-        categoryText = `PKL STAR (Pekan ${inputPekan ? inputPekan.value : '9'})`;
+        const pVal = inputPekan ? inputPekan.value : '9';
+        const jVal = inputJam ? inputJam.value : '48';
+        contentToSave = compileAllStarText(starData, pVal, jVal);
+        categoryText = `PKL STAR (Pekan ${pVal} • ${jVal}j)`;
       } else {
         contentToSave = txtOutput.value.trim();
         categoryText = selCategory.options[selCategory.selectedIndex].text.split(' ')[0] || 'Jurnal';
@@ -687,7 +704,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         content: contentToSave,
         isStar: isStar,
         starData: isStar ? { ...starData } : null,
-        pekan: isStar && inputPekan ? inputPekan.value : null
+        pekan: isStar && inputPekan ? inputPekan.value : null,
+        jam: isStar && inputJam ? inputJam.value : '48'
       };
 
       let history = appConfig.history || [];
@@ -753,6 +771,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             action: 'AUTO_FILL_MULTI',
             data: {
               pekan: inputPekan ? inputPekan.value : '9',
+              jam: inputJam ? inputJam.value : '48',
+              perencanaan: starData.perencanaan,
+              capaian: starData.capaian,
+              subCapaian: starData.subCapaian,
               situation: starData.situation,
               task: starData.task,
               action: starData.action,
@@ -765,7 +787,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               return;
             }
             if (response && response.success) {
-              showToast(`⚡ Berhasil mengisi ${response.count || 5} kolom logbook ke web!`);
+              showToast(`⚡ Berhasil mengisi ${response.count || 8} kolom logbook ke web!`);
             } else {
               showToast('Kolom tidak cocok otomatis. Coba tombol "Pilih Kolom Web".', true);
             }
@@ -852,34 +874,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       const style = selStyle ? selStyle.value : 'formal';
       const model = appConfig.geminiModel || 'gemini-3.5-flash-lite';
       const pekanVal = inputPekan ? inputPekan.value : '9';
+      const jamVal = inputJam ? inputJam.value : '48';
 
       btnGenerateAi.disabled = true;
       spinnerGenerate.classList.remove('hidden');
-      btnGenerateText.textContent = isStar ? 'Menyusun 5 Kolom STAR...' : 'Menyusun Jurnal dengan AI...';
+      btnGenerateText.textContent = isStar ? 'Menyusun Logbook PKL & STAR...' : 'Menyusun Jurnal dengan AI...';
 
       try {
         if (isStar) {
-          const generatedStar = await callGeminiStarApi(apiKey, model, notes, pekanVal);
+          const generatedStar = await callGeminiStarApi(apiKey, model, notes, pekanVal, jamVal);
           starData = generatedStar;
-          activeSection = 'situation';
+          activeSection = 'perencanaan';
 
           // Reset pill active state
           starPills.forEach(p => {
-            if (p.dataset.section === 'situation') p.classList.add('active');
+            if (p.dataset.section === 'perencanaan') p.classList.add('active');
             else p.classList.remove('active');
           });
 
-          loadSectionToOutput('situation');
+          loadSectionToOutput('perencanaan');
 
           // Automatically save to history
-          const fullContent = compileAllStarText(starData, pekanVal);
+          const fullContent = compileAllStarText(starData, pekanVal, jamVal);
           const historyItem = {
             timestamp: new Date().toISOString(),
-            category: `PKL STAR (Pekan ${pekanVal})`,
+            category: `PKL STAR (Pekan ${pekanVal} • ${jamVal}j)`,
             content: fullContent,
             isStar: true,
             starData: { ...starData },
-            pekan: pekanVal
+            pekan: pekanVal,
+            jam: jamVal
           };
           let history = appConfig.history || [];
           history.unshift(historyItem);
@@ -888,7 +912,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           appConfig.history = history;
           renderHistory();
 
-          showToast('✨ 5 Kolom STAR berhasil disusun!');
+          showToast('✨ Logbook PKL & 5 Kolom STAR berhasil disusun!');
         } else {
           // Single-column narrative generation
           const generatedJournal = await callGeminiSingleApi(apiKey, model, category, style, notes);
@@ -917,7 +941,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } finally {
         btnGenerateAi.disabled = false;
         spinnerGenerate.classList.add('hidden');
-        btnGenerateText.textContent = isStar ? 'Generate 5 Kolom STAR dengan AI' : 'Generate Jurnal dengan AI';
+        btnGenerateText.textContent = isStar ? 'Generate Logbook PKL & STAR (AI)' : 'Generate Jurnal dengan AI';
       }
     });
   }

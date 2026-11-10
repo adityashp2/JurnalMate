@@ -162,11 +162,11 @@
   </div>
 
   <div class="demo-info">
-    💡 <strong>Cara Menguji:</strong> Buka ekstensi <strong>JurnalMate AI</strong> di toolbar Chrome, klik tombol <strong>"Generate 5 Kolom STAR dengan AI"</strong>, lalu klik <strong>"⚡ Isi 5 Kolom ke Web"</strong>. Ekstensi akan otomatis mengisi Situasi, Tugas, Aksi, Hasil, Komentar, dan Pekan Ke seketika!
+    💡 <strong>Cara Menguji:</strong> Buka ekstensi <strong>JurnalMate AI</strong> di toolbar Chrome, klik tombol <strong>"Generate Logbook PKL & STAR (AI)"</strong>, lalu klik <strong>"⚡ Isi Logbook ke Web"</strong>. Ekstensi akan otomatis mengisi Pekan Ke, Jumlah Jam (48 Jam), Perencanaan Kegiatan PKL, Capaian Kegiatan, Sub Capaian Kegiatan, dan 5 Kolom STAR (Situasi, Tugas, Aksi, Hasil, Komentar)!
   </div>
 
   <div class="tab-switcher">
-    <button class="tab-btn active" id="btn-show-star">📋 Formulir PKL (STAR 5 Kolom)</button>
+    <button class="tab-btn active" id="btn-show-star">📋 Formulir PKL (STAR & Capaian)</button>
     <button class="tab-btn" id="btn-show-single">📝 Formulir Jurnal Standar (1 Kolom)</button>
   </div>
 
@@ -182,23 +182,35 @@
         </div>
 
         <div class="form-group">
+          <label for="jumlah-jam">Jumlah Jam <span class="req">*(48 Jam)</span></label>
+          <input type="number" id="jumlah-jam" name="jumlah_jam" value="48" placeholder="48">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
           <label for="tgl-mulai">Tanggal Pelaksanaan Mulai</label>
           <input type="text" id="tgl-mulai" name="tanggal_mulai" value="26-Okt-2026">
+        </div>
+
+        <div class="form-group">
+          <label for="tgl-akhir">Tanggal Pelaksanaan Akhir</label>
+          <input type="text" id="tgl-akhir" name="tanggal_akhir" value="01-Nov-2026">
         </div>
       </div>
 
       <div class="form-group">
-        <label for="tgl-akhir">Tanggal Pelaksanaan Akhir</label>
-        <input type="text" id="tgl-akhir" name="tanggal_akhir" value="01-Nov-2026">
+        <label for="perencanaan-kegiatan">Perencanaan Kegiatan PKL <span class="req">*(wajib diisi)</span></label>
+        <textarea id="perencanaan-kegiatan" name="perencanaan_kegiatan" rows="2" placeholder="Kolom ini akan diisi otomatis dengan Perencanaan Kegiatan PKL..."></textarea>
       </div>
 
       <div class="form-group">
-        <label for="capaian-1">Capaian Pembelajaran 1 <span class="req">*(wajib diisi)</span></label>
+        <label for="capaian-1">Capaian Kegiatan <span class="req">*(wajib diisi)</span></label>
         <input type="text" id="capaian-1" placeholder="Apabila data tidak ada di pencarian, silahkan ketik saja...">
       </div>
 
       <div class="form-group">
-        <label for="sub-capaian-1">Sub Capaian Pembelajaran 1 <span class="req">*(wajib diisi)</span></label>
+        <label for="sub-capaian-1">Sub Capaian Kegiatan <span class="req">*(wajib diisi)</span></label>
         <input type="text" id="sub-capaian-1" placeholder="Apabila data tidak ada di pencarian, silahkan ketik saja...">
       </div>
 

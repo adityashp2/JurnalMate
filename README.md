@@ -11,15 +11,19 @@ Ekstensi Google Chrome modern (Manifest V3) yang berfungsi untuk:
 
 - 🤖 **Integrasi Google Gemini AI Gratis**:
   - Pilihan model rekomendasi: `gemini-3.5-flash-lite` (stabil, cepat & kuota gratis luas).
-  - **🌟 Mode PKL / Magang (STAR 5 Kolom)**: Otomatis memecah dan menghasilkan 5 bagian terstruktur:
-    1. **Situation (Situasi)**
-    2. **Task (Tugas)**
-    3. **Action (Aksi)**
-    4. **Result (Hasil)**
-    5. **Komentar (Tantangan, Solusi, Tindak Lanjut)**
+  - **🌟 Mode PKL / Magang Lengkap (STAR & Capaian)**: Otomatis menghasilkan logbook PKL lengkap:
+    1. **Perencanaan Kegiatan PKL** (Agenda terstruktur rencana kerja pekan ini)
+    2. **Capaian Kegiatan** (Target capaian kompetensi utama)
+    3. **Sub Capaian Kegiatan** (Rincian modul/indikator tugas teknis)
+    4. **Jumlah Jam Kegiatan** (Otomatis default **48 Jam**)
+    5. **Situation (Situasi)**
+    6. **Task (Tugas)**
+    7. **Action (Aksi)**
+    8. **Result (Hasil)**
+    9. **Komentar (Tantangan, Solusi & Refleksi)**
   - **📝 Mode 1 Kolom**: Untuk pelaporan kantor, kinerja ASN/PPPK, dan catatan harian umum.
 - ⚡ **Auto-Fill ke Web Cerdas**:
-  - **Multi-Kolom Otomatis**: Sekali klik tombol *"⚡ Isi 5 Kolom ke Web"*, ekstensi otomatis mendeteksi kolom Situasi, Tugas, Aksi, Hasil, Komentar, dan Pekan Ke di formulir web, lalu mengisinya secara simultan!
+  - **Multi-Kolom Otomatis**: Sekali klik tombol *"⚡ Isi Logbook ke Web"*, ekstensi otomatis mendeteksi kolom Perencanaan, Capaian, Sub-Capaian, Jumlah Jam (48 jam), Pekan Ke, Situasi, Tugas, Aksi, Hasil, dan Komentar di formulir web, lalu mengisinya secara simultan!
   - **🎯 Mode Pemilih Kolom (Element Picker)**: Klik kolom spesifik mana pun di halaman web untuk menyuntikkan teks yang sedang aktif di editor.
 - 📲 **Pengingat WhatsApp (Fonnte / Go-WA)**:
   - Kirim pengingat langsung (*Instant Trigger*) atau pasang alarm harian terjadwal via service worker.
@@ -47,9 +51,9 @@ Ekstensi Google Chrome modern (Manifest V3) yang berfungsi untuk:
 
 ## 🔑 Langkah 1: Pengaturan Gemini API Key & WhatsApp (Halaman Opsi Terpisah)
 
-Pengaturan sekarang dipisahkan ke halaman **Opsi Chrome** agar popup ekstensi tetap ringkas, bersih, dan tidak memakan tempat:
+Pengaturan dipisahkan ke halaman **Opsi Chrome** agar popup ekstensi tetap ringkas, bersih, dan aman:
 
-- Kunci API Gemini boss (`AQ.Ab8RN6Krm...`) sudah otomatis terpasang dengan model default **`gemini-3.5-flash-lite`**.
+- Dapatkan kunci API Gemini gratis di [Google AI Studio](https://aistudio.google.com/app/apikey) lalu masukkan pada menu Pengaturan (model default: **`gemini-3.5-flash-lite`**).
 - Untuk membuka halaman Pengaturan:
   - **Cara 1**: Klik ikon roda gigi ⚙️ di pojok kanan atas popup ekstensi.
   - **Cara 2**: Klik kanan ikon ekstensi **JurnalMate** di toolbar Chrome -> pilih **Options** (Opsi).
@@ -113,3 +117,10 @@ d:\extenxion pengingat jurnal\
 ├── mock_gowa_server.js      # Server mock lokal Go-WA untuk testing instan
 └── README.md                # Panduan lengkap penggunaan
 ```
+
+---
+
+<p align="center">
+  <b>JurnalMate AI</b> • Created with ❤️ by <b>Techfdit</b>
+</p>
+

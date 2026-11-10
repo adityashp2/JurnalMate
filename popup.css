@@ -298,6 +298,14 @@ body {
   flex-direction: column;
 }
 
+#col-pekan {
+  flex: 0 0 54px;
+}
+
+#col-jam {
+  flex: 0 0 62px;
+}
+
 .field-group {
   display: flex;
   flex-direction: column;
@@ -989,4 +997,15 @@ input:checked + .toggle-slider::before {
 
 .mb-2 {
   margin-bottom: 4px;
+}
+
+/* App Footer Credits */
+.app-footer {
+  text-align: center;
+  padding: 4px 8px;
+  font-size: 9.5px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  flex-shrink: 0;
 }
