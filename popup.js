@@ -807,6 +807,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Helper: Send message to active tab with automatic content-script injection fallback
+  async function sendMessageToTab(tabId, message) {
+    return new Promise((resolve, reject) => {
+      chrome.tabs.sendMessage(tabId, message, async (response) => {
+        const lastErr = chrome.runtime.lastError;
+        if (!lastErr) {
+          return resolve(response);
+        }
+
+        const errMsg = lastErr.message || '';
+        // If content script is disconnected or not injected yet (e.g. tab opened before reload)
+        if (errMsg.includes('Receiving end does not exist') || errMsg.includes('Could not establish connection')) {
+          try {
+            await chrome.scripting.executeScript({
+              target: { tabId },
+              files: ['content.js']
+            });
+            try {
+              await chrome.scripting.insertCSS({
+                target: { tabId },
+                files: ['content.css']
+              });
+            } catch (cssErr) {}
+
+            // Small delay to allow content.js event listeners to bind
+            setTimeout(() => {
+              chrome.tabs.sendMessage(tabId, message, (retryResponse) => {
+                if (chrome.runtime.lastError) {
+                  reject(new Error('Tab web belum siap. Silakan klik refresh / F5 pada tab web target.'));
+                } else {
+                  resolve(retryResponse);
+                }
+              });
+            }, 120);
+          } catch (injectErr) {
+            reject(new Error('Tab web belum siap atau URL tidak diizinkan. Silakan refresh tab web target (F5).'));
+          }
+        } else {
+          reject(new Error(errMsg));
+        }
+      });
+    });
+  }
+
   // Auto-Fill Web Page
   if (btnAutofillWeb) {
     btnAutofillWeb.addEventListener('click', async () => {
@@ -819,7 +863,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        if (tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:')) {
+        if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:') || tab.url.startsWith('chrome-extension://'))) {
           showToast('Tidak dapat mengisi di halaman sistem browser.', true);
           return;
         }
@@ -838,27 +882,27 @@ document.addEventListener('DOMContentLoaded', async () => {
               return;
             }
 
-            chrome.tabs.sendMessage(tab.id, {
-              action: 'AUTO_FILL_MULTI',
-              data: {
-                pekan: inputPekan ? inputPekan.value : '9',
-                situation: starData.situation,
-                task: starData.task,
-                action: starData.action,
-                result: starData.result,
-                komentar: starData.komentar
-              }
-            }, (response) => {
-              if (chrome.runtime.lastError) {
-                showToast(`Gagal: ${chrome.runtime.lastError.message}. Refresh tab web target.`, true);
-                return;
-              }
+            try {
+              const response = await sendMessageToTab(tab.id, {
+                action: 'AUTO_FILL_MULTI',
+                data: {
+                  pekan: inputPekan ? inputPekan.value : '9',
+                  situation: starData.situation,
+                  task: starData.task,
+                  action: starData.action,
+                  result: starData.result,
+                  komentar: starData.komentar
+                }
+              });
+
               if (response && response.success) {
                 showToast(`⚡ Berhasil mengisi ${response.count || 5} kolom STAR ke web!`);
               } else {
                 showToast('Kolom tidak cocok otomatis. Coba tombol "Pilih Kolom Web".', true);
               }
-            });
+            } catch (err) {
+              showToast(`Gagal: ${err.message}`, true);
+            }
           } else {
             const hasPerencanaanContent = ['perencanaan', 'capaian', 'subCapaian'].some(k => starData[k] && starData[k].trim().length > 0);
             if (!hasPerencanaanContent) {
@@ -866,26 +910,26 @@ document.addEventListener('DOMContentLoaded', async () => {
               return;
             }
 
-            chrome.tabs.sendMessage(tab.id, {
-              action: 'AUTO_FILL_MULTI',
-              data: {
-                pekan: inputPekan ? inputPekan.value : '9',
-                jam: inputJam ? inputJam.value : '48',
-                perencanaan: starData.perencanaan,
-                capaian: starData.capaian,
-                subCapaian: starData.subCapaian
-              }
-            }, (response) => {
-              if (chrome.runtime.lastError) {
-                showToast(`Gagal: ${chrome.runtime.lastError.message}. Refresh tab web target.`, true);
-                return;
-              }
+            try {
+              const response = await sendMessageToTab(tab.id, {
+                action: 'AUTO_FILL_MULTI',
+                data: {
+                  pekan: inputPekan ? inputPekan.value : '9',
+                  jam: inputJam ? inputJam.value : '48',
+                  perencanaan: starData.perencanaan,
+                  capaian: starData.capaian,
+                  subCapaian: starData.subCapaian
+                }
+              });
+
               if (response && response.success) {
                 showToast(`⚡ Berhasil mengisi ${response.count || 5} kolom Perencanaan PKL ke web!`);
               } else {
                 showToast('Kolom tidak cocok otomatis. Coba tombol "Pilih Kolom Web".', true);
               }
-            });
+            } catch (err) {
+              showToast(`Gagal: ${err.message}`, true);
+            }
           }
         } else {
           // Single-column mode
@@ -895,17 +939,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
           }
 
-          chrome.tabs.sendMessage(tab.id, { action: 'AUTO_FILL', text }, (response) => {
-            if (chrome.runtime.lastError) {
-              showToast(`Gagal: ${chrome.runtime.lastError.message}. Coba refresh web.`, true);
-              return;
-            }
+          try {
+            const response = await sendMessageToTab(tab.id, { action: 'AUTO_FILL', text });
             if (response && response.success) {
               showToast('⚡ Berhasil disuntikkan ke kolom web!');
             } else {
               showToast('Kolom tidak ditemukan. Coba tombol "Pilih Kolom".', true);
             }
-          });
+          } catch (err) {
+            showToast(`Gagal: ${err.message}`, true);
+          }
         }
       } catch (err) {
         showToast(`Error: ${err.message}`, true);
@@ -929,18 +972,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        if (tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:')) {
+        if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:') || tab.url.startsWith('chrome-extension://'))) {
           showToast('Tidak dapat memilih di halaman internal browser.', true);
           return;
         }
 
-        chrome.tabs.sendMessage(tab.id, { action: 'START_PICKER', text }, (response) => {
-          if (chrome.runtime.lastError) {
-            showToast(`Gagal: ${chrome.runtime.lastError.message}. Refresh tab target.`, true);
-            return;
-          }
+        try {
+          await sendMessageToTab(tab.id, { action: 'START_PICKER', text });
           window.close();
-        });
+        } catch (err) {
+          showToast(`Gagal: ${err.message}`, true);
+        }
       } catch (err) {
         showToast(`Error: ${err.message}`, true);
       }

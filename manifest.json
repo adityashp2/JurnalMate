@@ -14,7 +14,8 @@
   "host_permissions": [
     "https://generativelanguage.googleapis.com/*",
     "http://*/*",
-    "https://*/*"
+    "https://*/*",
+    "file:///*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -33,7 +34,8 @@
     {
       "matches": [
         "http://*/*",
-        "https://*/*"
+        "https://*/*",
+        "file:///*"
       ],
       "js": ["content.js"],
       "css": ["content.css"],

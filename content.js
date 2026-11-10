@@ -434,13 +434,29 @@ function autoFillMultiColumns(data) {
   if (data.perencanaan) {
     const el = findBestCandidate(allEditableCandidates, [
       'perencanaan kegiatan pkl', 'perencanaan kegiatan', 'perencanaan pkl',
-      'rencana kegiatan', 'rencana pkl', 'perencanaan', 'rencana'
+      'rencana kegiatan', 'rencana kerja', 'rencana pkl', 'perencanaan', 'rencana', 'agenda'
     ]);
     if (el) {
       injectValueToElement(el, String(data.perencanaan));
       assignedElements.add(el);
       filledFields.push('Perencanaan PKL');
     }
+  }
+
+  // Step 5b: Fallback mapping for Perencanaan fields if not matched by keywords
+  const perencanaanKeys = [
+    { key: 'perencanaan', name: 'Perencanaan PKL' },
+    { key: 'capaian', name: 'Capaian Kegiatan' },
+    { key: 'subCapaian', name: 'Sub Capaian' }
+  ];
+  const unassignedPerencanaan = perencanaanKeys.filter(item => data[item.key] && !filledFields.includes(item.name));
+  const remainingPerencanaanCandidates = allEditableCandidates.filter(c => !assignedElements.has(c));
+  for (let i = 0; i < Math.min(unassignedPerencanaan.length, remainingPerencanaanCandidates.length); i++) {
+    const item = unassignedPerencanaan[i];
+    const el = remainingPerencanaanCandidates[i];
+    assignedElements.add(el);
+    injectValueToElement(el, String(data[item.key]));
+    filledFields.push(item.name);
   }
 
   // Step 6: Match 5 STAR Textareas by keywords
